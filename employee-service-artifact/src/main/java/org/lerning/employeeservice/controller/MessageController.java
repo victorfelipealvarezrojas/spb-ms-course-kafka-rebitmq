@@ -1,4 +1,4 @@
-package org.lerning.departmentservice.controller;
+package org.lerning.employeeservice.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -11,8 +11,11 @@ public class MessageController {
     @Value("${spring.boot.message}")
     private String message;
 
-    @GetMapping("message")
+    @GetMapping("/users/message")
     public String message() {
         return message;
     }
 }
+
+
+// actuator/busrefresh  actualiza al bus de rabbitmq y permite cambios en caliente  configserver git add .

@@ -16,3 +16,5 @@ public class MessageController {
         return message;
     }
 }
+
+// actuator/busrefresh  actualiza al bus de rabbitmq y permite cambios en caliente  configserver
