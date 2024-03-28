@@ -1,5 +1,6 @@
 package org.lerning.employeeservice.service.Implements;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
 import org.lerning.employeeservice.adapter.mapper.EmployeeDtoToEmployeeMapper;
 import org.lerning.employeeservice.adapter.mapper.EmployeeToEmployeeDtoMapper;
@@ -23,10 +24,7 @@ public class EmployeeServiceImplement implements EmployeeService {
     private final EmployeeToEmployeeDtoMapper entityToDtoMapper;
     private final ApiFeignRepository apiClient;
 
-    // private final WebClient webClient;
-    // private final RestTemplate restTemplate; deprecado a futuro
-
-    private final static String URL_API = "DEPARTMENT-SERVICE";
+    // private final static String URL_API = "DEPARTMENT-SERVICE";
 
     @Override
     public EmployeeDto saveEmployee(EmployeeDto employeeDto) {
@@ -41,21 +39,28 @@ public class EmployeeServiceImplement implements EmployeeService {
         return entityToDtoMapper.map(department);
     }
 
+    // implementa el patron Circuit Breaker (patron disyuntor)
+    @CircuitBreaker(name = "${spring.application.name}", fallbackMethod = "getDefaultDepartment")
     @Override
     public APIResponseDto getDEmployeeById(Long employeeId) {
         Employee employee = employeeRepository.findById(employeeId).orElseThrow(() ->
                 new NoSuchElementException("No employee found with id: " + employeeId));
 
-        /**
-         * @depercated  DepartmentDto departmentDto = restTemplate
-                .getForEntity(URL_API + employee.getDepartmentCode(), DepartmentDto.class)
-                .getBody();*/
+        DepartmentDto departmentDto = new DepartmentDto();
+        departmentDto.setDepartmentName("R&D Department");
+        departmentDto.setDepartmentCode("RD001");
+        departmentDto.setDepartmentDescription("Research and Development Department");
 
-        /* departmentDto = webClient.get()
-                .uri(URL_API  + employee.getDepartmentCode())
-                .retrieve()
-                .bodyToMono(DepartmentDto.class)
-                .block();*/
+
+        return new APIResponseDto(
+                entityToDtoMapper.map(employee),
+                departmentDto
+        );
+    }
+
+    public APIResponseDto getDefaultDepartment(Long employeeId, Exception exception) {
+        Employee employee = employeeRepository.findById(employeeId).orElseThrow(() ->
+                new NoSuchElementException("No employee found with id: " + employeeId));
 
         DepartmentDto departmentDto = apiClient.getDepartment(employee.getDepartmentCode());
 
